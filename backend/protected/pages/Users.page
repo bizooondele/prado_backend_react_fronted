@@ -1,0 +1,19 @@
+<%@ Title="Users" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Users</title>
+</head>
+<body>
+    <com:TForm>
+        <h1>Users</h1>
+
+        <com:TDataGrid ID="UsersGrid" AutoGenerateColumns="false">
+            <com:TBoundColumn DataField="name" HeaderText="Name" />
+            <com:TBoundColumn DataField="email" HeaderText="Email" />
+        </com:TDataGrid>
+
+        <com:TLabel ID="EmptyMessage" Text="No users found." Visible="false" />
+    </com:TForm>
+</body>
+</html>

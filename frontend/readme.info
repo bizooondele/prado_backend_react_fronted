@@ -1,0 +1,4 @@
+Created using nvm 24
+npm create vite@latest frontend -- --template react
+cd frontend
+npm run dev

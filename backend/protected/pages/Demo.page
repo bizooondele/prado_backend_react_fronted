@@ -1,0 +1,18 @@
+<%@ Title="Moja pierwsza strona w PRADO" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Moja pierwsza strona w PRADO</title>
+</head>
+<body>
+    <com:TForm>
+        <h1>Witaj w PRADO!</h1>
+        
+        <com:TTextBox ID="NameInput" Attributes.placeholder="Wpisz swoje imię..." />
+        <com:TButton Text="Kliknij mnie" OnClick="buttonClicked" />
+        
+        <br/><br/>
+        <com:TLabel ID="GreetingLabel" />
+    </com:TForm>
+</body>
+</html>

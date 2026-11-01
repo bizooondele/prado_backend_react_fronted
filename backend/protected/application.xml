@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<application id="MojProjekt" mode="Debug">
+    <paths>
+        <using namespace="Application.App_Code.*" />
+        <using namespace="Application.components.*" />
+        <using namespace="System.Web.UI.THtmlControls.*" />
+        <using namespace="System.Data.*" />
+        <using namespace="System.Data.ActiveRecord.*" />
+        <using namespace="System.Security.*" />
+        <using namespace="System.Web.UI.ActiveControls.*" />
+    </paths>
+    <modules>
+        <module id="db" class="TActiveRecordConfig">
+            <database ConnectionString="mysql:host=localhost;dbname=prado;charset=utf8mb4"
+                Username="admin"
+                Password="zenek_123"
+                Active="true" />
+        </module>
+        <module id="url" class="System.Web.TUrlMapping" EnableCustomUrl="true">
+            <url Pattern="api/process-message" ServiceID="json" ServiceParameter="processMessage" />
+        </module>
+    </modules>
+    <services>
+        <service id="page" class="TPageService" DefaultPage="Home" />
+        
+        <service id="json" class="System.Web.Services.TJsonService">
+            <json id="api" class="Application.App_Code.ApiController" />
+            <json id="processMessage" class="Application.App_Code.ApiController" />
+        </service>
+        <service id="wsat" class="System.Wsat.TWsatService" Password="zenek_123" />
+    </services>
+</application>

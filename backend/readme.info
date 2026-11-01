@@ -1,0 +1,104 @@
+curl -s http://getcomposer.org/installer | php
+php7.4 composer.phar install
+API_KEY='replace-with-a-long-random-secret' php7.4 -S 0.0.0.0:8000
+dont forget to create db
+
+Phinx is configured in phinx.php. Composer installs Phinx but does not generate
+its configuration. Set PHINX_DB_PASSWORD in the shell (and override other
+PHINX_DB_* values if needed), then run:
+
+PHINX_DB_PASSWORD='your-database-password' php7.4 vendor/bin/phinx migrate
+
+to serve from apache2 need to use following apache2 config:
+
+<VirtualHost *:8005>
+    ServerName 192.168.1.111
+    DocumentRoot /home/rafal/polaris/backend
+    DirectoryIndex index.php
+    SetEnv API_KEY "replace-with-a-long-random-secret"
+
+    <Directory /home/rafal/polaris/backend>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <Directory /home/rafal/polaris/backend/protected>
+        Require all denied
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/polaris_error.log
+    CustomLog ${APACHE_LOG_DIR}/polaris_access.log combined
+</VirtualHost>
+
+./backend/protected/runtime and /backend/assets need to be chown by www-data
+
+All /api endpoints require the X-API-Key request header. Configure the expected
+key as the API_KEY environment variable for the PHP process. For Apache, SetEnv
+can be used as shown above; keep the real key in deployment configuration, not
+in source control. Requests without a valid key receive HTTP 401. If API_KEY is
+unset or empty, API requests fail closed with HTTP 500.
+Treat the API key as a bearer credential and expose the API over HTTPS in
+production.
+
+Example request:
+
+curl -H 'X-API-Key: dlgjh2hyeuihdbn13or794yghn2o3p=eif' \
+  'http://localhost:8000/api/users'
+
+JSON API routes accept parameters in a JSON object request body for all HTTP
+methods. For GET requests, query parameters remain supported as a fallback.
+Send `Content-Type: application/json`; form-encoded POST fields are not read.
+
+GET    /api/users                         Optional id selects one user.
+POST   /api/user                          name, email, password.
+PUT    /api/user                          id and any fields to update.
+DELETE /api/user                          id.
+GET    /api/chat_users                    Optional username selects one chat user.
+GET    /api/chat_user                     username.
+POST   /api/chat_user                     username.
+DELETE /api/chat_user                     Deletes all chat users.
+GET    /api/chat_user_last_activity       username query parameter.
+PUT    /api/chat_user_last_activity       username and last_activity.
+GET    /api/user_messages                 username query parameter.
+GET    /api/user_message_created_on       id query parameter.
+PUT    /api/user_message_created_on       id and created_on.
+POST   /api/user_message                  from_user and message.
+
+Note: GET request bodies are not supported consistently by all HTTP clients and
+intermediaries; query parameters are the interoperable option for GET selectors.
+
+<VirtualHost *:8004>
+    ServerName 192.168.1.111
+    DocumentRoot /home/rafal/prado/backend
+    DirectoryIndex index.php
+
+    <Directory /home/rafal/prado/backend>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    # Blokada dostępu do katalogu protected z poziomu przeglądarki
+    <Directory /home/rafal/prado/backend/protected>
+        Require all denied
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/prado_error.log
+    CustomLog ${APACHE_LOG_DIR}/prado_access.log combined
+</VirtualHost>
+
+
+NBA data model (migrations + seed)
+
+Order: php8.3 vendor/bin/phinx migrate  (applies 20261023120000 reference tables,
+20261023120100 players, 20261023120200 stats/games, in that order), then
+php8.3 vendor/bin/phinx seed:run -s NbaSeeder
+NbaSeeder is idempotent (upserts on external ids / unique keys) and can be re-run.
+It loads 30 teams, stadiums, 30 head coaches, positions (ESPN's G/F/C only) and the
+516 players on ESPN's 2026-27 rosters as observed 2026-10-23 (data in
+db/seeds/data/nba_2026_27.php; sources are listed in the NbaSeeder docblock).
+Not seeded (no sourced data): two-way/contract type (players.contract_type is NULL =
+unknown), prior teams, season/career stats, games, game stats, champions.
+ActiveRecord models are the *Record classes in protected/App_Code (relations are
+declared in each class's $RELATIONS). Stat column is totalRebounds.

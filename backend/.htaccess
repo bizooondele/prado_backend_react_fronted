@@ -1,0 +1,13 @@
+# Nie przekierowuj fizycznie istniejących plików i katalogów (css, js, obrazy)
+RewriteEngine On
+
+RewriteRule ^api/process-message/?$ index.php?json=processMessage [L,QSA]
+RewriteRule ^api/.*$ index.php?json=api [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Przekieruj wszystkie pozostałe żądania do index.php
+RewriteRule ^(.*)$ index.php/$1 [L,QSA]
+# API_KEY
+SetEnv API_KEY "dlgjh2hyeuihdbn13or794yghn2o3p=eif"
