@@ -12,12 +12,19 @@ class UserRecord extends TActiveRecord
     public $password;
     public $comments;
     public $status = 0; // INT column storing bit flags
+    public $origin = 0;
 
     private static $flagMap = [
         'IS_ACTIVE'    => 1,
         'IS_MODERATOR' => 2,
         'IS_ADMIN'     => 4,
         'IS_PREMIUM'   => 8,
+    ];
+
+    public static $ORIGIN_FLAG_MAP= [
+        'email' => 1,
+        'google' => 2,
+        'facebook' => 4
     ];
 
     public static $RELATIONS = array(
@@ -49,5 +56,17 @@ class UserRecord extends TActiveRecord
             }
         }
         $this->status = $newStatus;
+    }
+
+    public function getOriginString()
+    {
+        return self::getOriginStringFromValue($this->origin);
+    }
+
+    public static function getOriginStringFromValue($originValue)
+    {
+        $origin = array_search((int) $originValue, self::$ORIGIN_FLAG_MAP, true);
+
+        return $origin === false ? null : $origin;
     }
 }

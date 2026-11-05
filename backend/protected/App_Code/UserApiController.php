@@ -42,7 +42,7 @@ class UserApiController extends ApiResourceController
 
         $db = Prado::getApplication()->getModule('db')->DbConnection;
         $db->setActive(true);
-        $sql = "SELECT u.id, u.name, u.email, u.status, c.id AS comment_id, SUBSTRING(c.comment, 1, :maxLength) AS comment, c.user_id FROM users u LEFT JOIN comments c ON u.id = c.user_id";
+        $sql = "SELECT u.id, u.name, u.email, u.status, u.origin, c.id AS comment_id, SUBSTRING(c.comment, 1, :maxLength) AS comment, c.user_id FROM users u LEFT JOIN comments c ON u.id = c.user_id";
         $command = $db->createCommand($sql);
                 $command->bindValue(':maxLength', $maxLength === null ? 2147483647 : $maxLength, PDO::PARAM_INT);
                 $rows = $command->query()->readAll();
@@ -50,12 +50,14 @@ class UserApiController extends ApiResourceController
         $userMap = array();
         foreach ($rows as $row) {
             $userId = $row['id'];
+            //$orFlag = array();
             if (!isset($userMap[$userId])) {
                 $userMap[$userId] = array(
                     'id' => $row['id'],
                     'name' => $row['name'],
                     'email' => $row['email'],
                     'status' => $row['status'],
+                    'origin' => UserRecord::getOriginStringFromValue($row['origin']),
                     'comments' => array()
                 );
             }
@@ -146,7 +148,8 @@ class UserApiController extends ApiResourceController
             'id' => (int) $record->id,
             'name' => $record->name,
             'email' => $record->email,
-            'status' => $record->status
+            'status' => $record->status,
+            'origin' => $record->getOriginString()
         );
     }
 
@@ -160,6 +163,13 @@ class UserApiController extends ApiResourceController
                 'comment' => $maxLength === null
                     ? $comment->comment
                     : mb_substr((string) $comment->comment, 0, $maxLength, 'UTF-8')
+            );
+        }
+        $user['origin_flags'] = array();
+        foreach ($record->originFlags as $flag) {
+            $user['origin_flags'][] = array(
+                'id' => (int) $flag->id,
+                'flag' => $flag->flag
             );
         }
 

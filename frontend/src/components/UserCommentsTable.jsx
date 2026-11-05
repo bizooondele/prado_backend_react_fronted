@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Table, Modal, Button, Checkbox, Spin, message } from 'antd'
+import { Table, Modal, Button, Checkbox, Spin, Select, message } from 'antd'
 import { CommentOutlined, EditOutlined } from '@ant-design/icons'
 import SaveableTextArea from './SavableTextField'
 
 const COMMENT_LENGTH = 50
+const ORIGINS = ['email', 'google', 'facebook'].map((value) => ({
+  value,
+  label: value,
+}))
 const STATUS_ROLES = [
   { bit: 1, label: 'IS ACTIVE' },
   { bit: 2, label: 'IS MODERATOR' },
@@ -114,9 +118,42 @@ export default function UserCommentsTable() {
     }
   }
 
+  const saveOrigin = async (user, origin) => {
+    const previous = user.origin
+    const apply = (value) =>
+      setUsers((currentUsers) =>
+        currentUsers.map((u) => (u.id === user.id ? { ...u, origin: value } : u)),
+      )
+    apply(origin)
+    try {
+      const res = await fetch(`/api/user?id=${encodeURIComponent(user.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ origin }),
+      })
+      if (!res.ok) throw new Error('Failed to save origin')
+    } catch (e) {
+      apply(previous)
+      message.error(e.message)
+    }
+  }
+
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
+    {
+      title: 'Origin',
+      dataIndex: 'origin',
+      key: 'origin',
+      render: (origin, user) => (
+        <Select
+          value={origin}
+          options={ORIGINS}
+          style={{ width: 120 }}
+          onChange={(value) => saveOrigin(user, value)}
+        />
+      ),
+    },
     {
       title: 'Roles',
       dataIndex: 'status',
