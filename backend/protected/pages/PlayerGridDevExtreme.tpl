@@ -13,13 +13,13 @@
         <header><h1>Players</h1></header>
         <p>Players with the last name Williams or Willams cannot be selected.</p>
         <div id="player-grid"></div>
-        <p>Selection filter (empty array: none; null: all):</p>
-        <pre id="selection-filter">[]</pre>
+        <p>Selected player IDs:</p>
+        <pre id="selected-player-ids">[]</pre>
         <script type="application/json" id="player-grid-data"><%= $this->getRowsJson() %></script>
         <script>
             (function () {
                 var rows = JSON.parse(document.getElementById('player-grid-data').textContent);
-                var filterDisplay = document.getElementById('selection-filter');
+                var selectionDisplay = document.getElementById('selected-player-ids');
                 var selectAllCheckBox;
                 var updatingSelectAll = false;
                 var changingSelectAll = false;
@@ -47,7 +47,7 @@
                     }
                     var selectableRows = selectableRowsForFilter(grid);
                     var selectedCount = selectableRows.filter(function (row) {
-                        return grid.isRowSelected(row);
+                        return grid.isRowSelected(row.id);
                     }).length;
                     updatingSelectAll = true;
                     try {
@@ -70,9 +70,9 @@
                         allowSelectAll: true,
                         selectAllMode: 'allPages',
                         showCheckBoxesMode: 'always',
-                        deferred: true
+                        deferred: false
                     },
-                    selectionFilter: [],
+                    selectedRowKeys: [],
                     filterRow: { visible: true },
                     paging: { pageSize: 10 },
                     pager: {
@@ -86,7 +86,7 @@
                             caption: 'Team name',
                             sortOrder: 'asc',
                             cellTemplate: function (cell, options) {
-                                if (!options.component.isRowSelected(options.data)) {
+                                if (!options.component.isRowSelected(options.key)) {
                                     cell.textContent = options.value;
                                 }
                             }
@@ -97,11 +97,6 @@
                         { dataField: 'jersey_number', caption: 'Jersey number', dataType: 'number' },
                         { dataField: 'points', caption: 'Game stats (Points)', dataType: 'number' }
                     ],
-                    onOptionChanged: function (e) {
-                        if (e.name === 'selectionFilter') {
-                            filterDisplay.textContent = JSON.stringify(e.value, null, 2);
-                        }
-                    },
                     onEditorPreparing: function (e) {
                         if (e.type !== 'selection') {
                             return;
@@ -137,7 +132,7 @@
                     },
                     onSelectionChanged: function (e) {
                         var excludedKeys = excludedRows.filter(function (row) {
-                            return e.component.isRowSelected(row);
+                            return e.component.isRowSelected(row.id);
                         }).map(function (row) {
                             return row.id;
                         });
@@ -145,7 +140,9 @@
                             e.component.deselectRows(excludedKeys).catch(function (error) {
                                 console.error('Unable to exclude unselectable players:', error);
                             });
+                            return;
                         }
+                        selectionDisplay.textContent = JSON.stringify(e.selectedRowKeys, null, 2);
                         e.component.repaint();
                     },
                     onContentReady: function (e) {
