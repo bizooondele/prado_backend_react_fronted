@@ -102,3 +102,16 @@ Not seeded (no sourced data): two-way/contract type (players.contract_type is NU
 unknown), prior teams, season/career stats, games, game stats, champions.
 ActiveRecord models are the *Record classes in protected/App_Code (relations are
 declared in each class's $RELATIONS). Stat column is totalRebounds.
+
+The authenticated page ?page=PlayerGridDevExtreme is a DevExtreme DataGrid
+version of ?page=PlayerGrid. It loads the same player data and supports sorting,
+filtering, paging, and deferred multi-selection across pages. Select all applies
+to the current grid filter. The displayed selectionFilter is a DevExtreme filter
+expression for the selected rows: [] means none and null means all. Selection is
+client-side and resets on reload; changing the grid filter does not clear it.
+As in PlayerGrid, the team name is hidden for selected rows.
+Players whose last name is Williams or Willams (case-insensitive, ignoring
+surrounding whitespace) remain visible but cannot be selected, including when
+selecting all rows across pages.
+This page loads DevExtreme 24.2.7 from the DevExpress CDN and requires network
+access and an appropriate DevExtreme license.
