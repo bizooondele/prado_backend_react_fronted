@@ -97,18 +97,50 @@
                         { dataField: 'jersey_number', caption: 'Jersey number', dataType: 'number' },
                         { dataField: 'points', caption: 'Game stats (Points)', dataType: 'number' }
                     ],
-                    onEditorPreparing: function (e) {
-                        if (e.type !== 'selection') {
+                    onSelectionChanged: function (e) {
+                        var excludedKeys = excludedRows.filter(function (row) {
+                            return e.component.isRowSelected(row.id);
+                        }).map(function (row) {
+                            return row.id;
+                        });
+                        if (excludedKeys.length) {
+                            e.component.deselectRows(excludedKeys).catch(function (error) {
+                                console.error('Unable to exclude unselectable players:', error);
+                            });
                             return;
                         }
-                        if (e.parentType === 'dataRow' && e.row && !isSelectable(e.row.data)) {
-                            e.editorOptions.disabled = true;
-                        } else if (e.parentType === 'headerRow') {
-                            var grid = e.component;
-                            e.editorOptions.onInitialized = function (event) {
-                                selectAllCheckBox = event.component;
-                            };
-                            e.editorOptions.onValueChanged = function (event) {
+                        console.log('Selection changed:', e);
+                        selectionDisplay.textContent = JSON.stringify(e.selectedRowKeys, null, 2);
+                        e.component.repaint();
+                    },
+                    onContentReady: function (e) {
+                        var grid = e.component;
+                        var visibleRows = grid.getVisibleRows();
+                        visibleRows.forEach(function (row) {
+                            if (row.rowType !== 'data') {
+                                return;
+                            }
+                            var rowElement = grid.getRowElement(row.rowIndex);
+                            if (rowElement && !rowElement.nodeType) {
+                                rowElement = rowElement[0];
+                            }
+                            var checkboxElement = rowElement
+                                && rowElement.querySelector('.dx-select-checkbox');
+                            var checkbox = checkboxElement
+                                && DevExpress.ui.dxCheckBox.getInstance(checkboxElement);
+                            if (checkbox) {
+                                checkbox.option('disabled', !isSelectable(row.data));
+                            }
+                        });
+
+                        var headerCheckboxElement = document.querySelector(
+                            '#player-grid .dx-header-row .dx-select-checkbox'
+                        );
+                        var headerCheckbox = headerCheckboxElement
+                            && DevExpress.ui.dxCheckBox.getInstance(headerCheckboxElement);
+                        if (headerCheckbox && headerCheckbox !== selectAllCheckBox) {
+                            selectAllCheckBox = headerCheckbox;
+                            headerCheckbox.option('onValueChanged', function (event) {
                                 if (!event.event || updatingSelectAll || changingSelectAll) {
                                     return;
                                 }
@@ -127,25 +159,8 @@
                                 action.catch(function (error) {
                                     console.error('Unable to update player selection:', error);
                                 });
-                            };
-                        }
-                    },
-                    onSelectionChanged: function (e) {
-                        var excludedKeys = excludedRows.filter(function (row) {
-                            return e.component.isRowSelected(row.id);
-                        }).map(function (row) {
-                            return row.id;
-                        });
-                        if (excludedKeys.length) {
-                            e.component.deselectRows(excludedKeys).catch(function (error) {
-                                console.error('Unable to exclude unselectable players:', error);
                             });
-                            return;
                         }
-                        selectionDisplay.textContent = JSON.stringify(e.selectedRowKeys, null, 2);
-                        e.component.repaint();
-                    },
-                    onContentReady: function (e) {
                         updateSelectAll(e.component);
                     }
                 });
