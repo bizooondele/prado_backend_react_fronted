@@ -148,6 +148,9 @@ class ApiController extends TJsonResponse
                 'GET' => array_key_exists('teamname', $data)
                     ? array('TeamRecordApiController', 'getOneWithPlayers')
                     : array('TeamRecordApiController', 'getAllWithPlayers')
+            ),
+           '/api/test/post-json' => array(
+                'POST' => array('TestApiController', 'postJson')
             )
         );
 
