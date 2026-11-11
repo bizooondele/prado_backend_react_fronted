@@ -59,13 +59,27 @@ class ApiController extends TJsonResponse
         }
     }
 
-    protected function getRequestPath()
-    {
-        $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
-        $path = parse_url($requestUri, PHP_URL_PATH);
+protected function getRequestPath()
+{
+    $requestUri = isset($_SERVER['REQUEST_URI'])
+        ? $_SERVER['REQUEST_URI']
+        : '/';
 
-        return is_string($path) ? rtrim($path, '/') ?: '/' : '/';
+    $path = parse_url($requestUri, PHP_URL_PATH);
+
+    if (!is_string($path)) {
+        return '/';
     }
+
+    // Remove UserDir application prefix when present
+    $userDirPrefix = '/~rafal/prado_backend_react_fronted/backend';
+
+    if (strpos($path, $userDirPrefix) === 0) {
+        $path = substr($path, strlen($userDirPrefix));
+    }
+
+    return rtrim($path, '/') ?: '/';
+}
 
     protected function getRequestData()
     {
