@@ -273,6 +273,43 @@ class ApiControllerTest extends PHPUnit\Framework\TestCase
     }
 
     /**
+     * @dataProvider deploymentPrefixes
+     */
+    public function testDispatchesTestPostUnderDeploymentPrefix($prefix)
+    {
+        $originalScriptName = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : null;
+        try {
+            $_SERVER['SCRIPT_NAME'] = $prefix . '/index.php';
+            $_SERVER['REQUEST_METHOD'] = 'POST';
+            $_SERVER['REQUEST_URI'] = $prefix . '/api/test/post-json';
+            $controller = new TestableApiController();
+            $controller->requestBody = '{"variable":"someValue"}';
+
+            $result = $controller->getJsonContent();
+
+            $this->assertSame('success', $result['status']);
+            $this->assertSame('TestApiController', $controller->createdController);
+            $this->assertSame('postJson', $controller->resource->action);
+            $this->assertSame(array('variable' => 'someValue'), $controller->resource->data);
+        } finally {
+            if ($originalScriptName === null) {
+                unset($_SERVER['SCRIPT_NAME']);
+            } else {
+                $_SERVER['SCRIPT_NAME'] = $originalScriptName;
+            }
+        }
+    }
+
+    public static function deploymentPrefixes()
+    {
+        return array(
+            array(''),
+            array('/~rafal/prado/backend'),
+            array('/other/application')
+        );
+    }
+
+    /**
      * @dataProvider apiRouteCases
      */
     public function testDispatchesConfiguredRoute($route, $method, $data, $expectedController, $expectedAction)

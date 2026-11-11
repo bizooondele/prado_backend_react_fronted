@@ -71,13 +71,24 @@ protected function getRequestPath()
         return '/';
     }
 
-    // Remove UserDir application prefix when present
-    $userDirPrefix = '/~rafal/prado_backend_react_fronted/backend';
+    // Remove the entry script's directory when the application is deployed under a prefix.
+    $scriptName = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
+    $scriptDirectory = str_replace('\\', '/', dirname($scriptName));
+    $scriptDirectory = $scriptDirectory === '.' ? '' : rtrim($scriptDirectory, '/');
+    if ($scriptDirectory !== '' && strpos($path, $scriptDirectory . '/') === 0) {
+        return rtrim(substr($path, strlen($scriptDirectory)), '/') ?: '/';
+    }
 
-    if (strpos($path, $userDirPrefix) === 0) {
+    // Preserve the known UserDir prefixes when the entry script path is unavailable.
+    $userDirPrefix = '/~rafal/prado_backend_react_fronted/backend';
+    $userDirPrefix2 = '/~rafal/prado/backend';
+    if (strpos($path, $userDirPrefix) === 0 ) {
         $path = substr($path, strlen($userDirPrefix));
     }
 
+    if (strpos($path, $userDirPrefix2) === 0 ) {
+        $path = substr($path, strlen($userDirPrefix2));
+    }
     return rtrim($path, '/') ?: '/';
 }
 

@@ -22,6 +22,7 @@
         </p>
         <pre id="post-json-result" role="status" aria-live="polite"></pre>
         <script type="application/json" id="player-grid-data"><%= $this->getRowsJson() %></script>
+        <script type="application/json" id="test-api-path"><%= $this->getTestApiPathJson() %></script>
         <script>
             (function () {
                 var rows = JSON.parse(document.getElementById('player-grid-data').textContent);
@@ -42,7 +43,7 @@
                     postButton.disabled = true;
                     postResult.textContent = 'Sending request...';
                     try {
-                        var response = await fetch('http://localhost/~rafal/prado/backend/api/test/post-json', {
+                        var response = await fetch(JSON.parse(document.getElementById('test-api-path').textContent), {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
