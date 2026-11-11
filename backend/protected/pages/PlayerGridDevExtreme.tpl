@@ -15,14 +15,50 @@
         <div id="player-grid"></div>
         <p>Selected player IDs:</p>
         <pre id="selected-player-ids">[]</pre>
+        <p>
+            <label for="test-api-key">API key:</label>
+            <input id="test-api-key" type="password" autocomplete="off">
+            <button id="post-json" type="button">Send test JSON</button>
+        </p>
+        <pre id="post-json-result" role="status" aria-live="polite"></pre>
         <script type="application/json" id="player-grid-data"><%= $this->getRowsJson() %></script>
         <script>
             (function () {
                 var rows = JSON.parse(document.getElementById('player-grid-data').textContent);
                 var selectionDisplay = document.getElementById('selected-player-ids');
+                var postButton = document.getElementById('post-json');
+                var apiKeyInput = document.getElementById('test-api-key');
+                var postResult = document.getElementById('post-json-result');
                 var selectAllCheckBox;
                 var updatingSelectAll = false;
                 var changingSelectAll = false;
+
+                postButton.addEventListener('click', async function () {
+                    if (!apiKeyInput.value) {
+                        postResult.textContent = 'Enter an API key before sending the request.';
+                        return;
+                    }
+
+                    postButton.disabled = true;
+                    postResult.textContent = 'Sending request...';
+                    try {
+                        var response = await fetch('http://localhost/~rafal/prado/backend/api/test/post-json', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKeyInput.value
+                            },
+                            body: JSON.stringify({ variable: 'someValue' })
+                        });
+                        var responseText = await response.text();
+                        postResult.textContent = 'HTTP ' + response.status + '\n' + responseText;
+                    } catch (error) {
+                        console.error('Unable to send test JSON:', error);
+                        postResult.textContent = 'Request failed: ' + error.message;
+                    } finally {
+                        postButton.disabled = false;
+                    }
+                });
 
                 function isSelectable(row) {
                     var lastName = String(row.last_name || '').trim().toLowerCase();
