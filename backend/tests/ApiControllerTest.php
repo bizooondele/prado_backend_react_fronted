@@ -247,6 +247,64 @@ class ApiControllerTest extends PHPUnit\Framework\TestCase
         $this->assertSame('alice', $controller->resource->data['username']);
     }
 
+    public function testDispatchesSensorBatchWithGateFromQuery()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/api/sensors/register_reading';
+        $_GET['gate-nr'] = '7';
+        $controller = new TestableApiController();
+        $controller->requestBody = '[{"type":"CONVEYOR","gate-nr":"wrong"},{"type":"OTHER"}]';
+
+        $result = $controller->getJsonContent();
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame('SensorApiController', $controller->createdController);
+        $this->assertSame('registerReading', $controller->resource->action);
+        $this->assertSame('7', $controller->resource->data['gate-nr']);
+        $this->assertCount(2, $controller->resource->data['readings']);
+        $this->assertSame('OTHER', $controller->resource->data['readings'][1]->type);
+    }
+
+    public function testDispatchesSingleSensorReading()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/api/sensors/register_reading';
+        $_GET['gate-nr'] = '1';
+        $controller = new TestableApiController();
+        $controller->requestBody = '{"type":"CONVEYOR"}';
+
+        $result = $controller->getJsonContent();
+
+        $this->assertSame('success', $result['status']);
+        $this->assertCount(1, $controller->resource->data['readings']);
+        $this->assertSame('CONVEYOR', $controller->resource->data['readings'][0]->type);
+    }
+
+    public function testRejectsWrongSensorMethod()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/api/sensors/register_reading';
+        $controller = new TestableApiController();
+
+        $result = $controller->getJsonContent();
+
+        $this->assertSame(405, $controller->response->statusCode);
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testRejectsMalformedSensorJson()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/api/sensors/register_reading';
+        $controller = new TestableApiController();
+        $controller->requestBody = '[{"type":"CONVEYOR"},]';
+
+        $result = $controller->getJsonContent();
+
+        $this->assertSame(400, $controller->response->statusCode);
+        $this->assertSame('error', $result['status']);
+    }
+
     public function testRejectsInvalidJsonBodyOnGet()
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';

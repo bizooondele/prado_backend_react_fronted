@@ -64,6 +64,15 @@ GET    /api/user_messages                 username query parameter.
 GET    /api/user_message_created_on       id query parameter.
 PUT    /api/user_message_created_on       id and created_on.
 POST   /api/user_message                  from_user and message.
+POST   /api/sensors/register_reading      gate-nr query parameter and one reading
+                                          object or a non-empty array of readings.
+
+Sensor readings require string fields type, timestamp (UTC, in
+YYYY-MM-DD:HH:MM:SS format), and data.idHex. Each reading is stored as a
+separate JSON object in raw_sensor_data.data. Its aid is
+gate_<gate-nr>_<type>_<idHex>, eid is the timestamp as Unix seconds, and
+creation_time is the current UTC time. Timestamps must fit a signed 32-bit eid.
+The entire batch is rejected if any reading is invalid, and inserts are atomic.
 
 Note: GET request bodies are not supported consistently by all HTTP clients and
 intermediaries; query parameters are the interoperable option for GET selectors.

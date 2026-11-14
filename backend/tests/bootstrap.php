@@ -12,5 +12,6 @@ require_once __DIR__ . '/../protected/App_Code/ChatBufferRecord.php';
 require_once __DIR__ . '/../protected/App_Code/UserApiController.php';
 require_once __DIR__ . '/../protected/App_Code/ChatUserApiController.php';
 require_once __DIR__ . '/../protected/App_Code/ChatBufferApiController.php';
+require_once __DIR__ . '/../protected/App_Code/SensorApiController.php';
 require_once __DIR__ . '/../protected/App_Code/ApiController.php';
 require_once __DIR__ . '/../protected/pages/Home.php';

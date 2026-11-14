@@ -20,7 +20,9 @@ class ApiController extends TJsonResponse
                 return $this->processMessage();
             }
 
-            $data = $this->getRequestData();
+            $data = $route === '/api/sensors/register_reading' && $method === 'POST'
+                ? $this->getSensorRequestData()
+                : $this->getRequestData();
             $operation = $this->resolveOperation($route, $method, $data);
 
             if ($operation === null) {
@@ -103,11 +105,25 @@ protected function getRequestPath()
         }
 
         $decoded = json_decode($body);
-        if (!is_object($decoded)) {
-            throw new ApiRequestException(400, 'Request body must be a JSON object.');
+        if (!is_object($decoded) && !is_array($decoded)) {
+            throw new ApiRequestException(400, 'Request body must be a JSON object or array.');
         }
 
-        return array_merge($data, get_object_vars($decoded));
+        $bodyData = is_object($decoded) ? get_object_vars($decoded) : $decoded;
+        return array_merge($data, $bodyData);
+    }
+
+    protected function getSensorRequestData()
+    {
+        $decoded = json_decode($this->getRequestBody());
+        if (!is_object($decoded) && !is_array($decoded)) {
+            throw new ApiRequestException(400, 'Request body must be a JSON object or array.');
+        }
+
+        return array(
+            'gate-nr' => isset($_GET['gate-nr']) ? $_GET['gate-nr'] : null,
+            'readings' => is_array($decoded) ? $decoded : array($decoded)
+        );
     }
 
     protected function resolveOperation($route, $method, $data)
@@ -173,6 +189,9 @@ protected function getRequestPath()
                 'GET' => array_key_exists('teamname', $data)
                     ? array('TeamRecordApiController', 'getOneWithPlayers')
                     : array('TeamRecordApiController', 'getAllWithPlayers')
+            ),
+            '/api/sensors/register_reading' => array(
+                'POST' => array('SensorApiController', 'registerReading')
             ),
            '/api/test/post-json' => array(
                 'POST' => array('TestApiController', 'postJson')
